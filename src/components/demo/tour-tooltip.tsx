@@ -38,7 +38,7 @@ interface TourTooltipProps {
   fading?: boolean;
 }
 
-const TOOLTIP_WIDTH = 360;
+const TOOLTIP_WIDTH = 320;
 const TOOLTIP_GAP = 16;
 const SPOTLIGHT_PAD = 8;
 
@@ -171,12 +171,31 @@ function computePosition(
     }
   }
 
-  // All sides overlap — use the left gutter (sidebar area)
-  // Position at left=12, vertically centered in viewport
+  // All sides overlap — try viewport corners (least likely to cover key content)
+  const corners: Array<{ top: number; left: number }> = [
+    { top: 12, left: vw - TOOLTIP_WIDTH - 12 },                    // top-right
+    { top: vh - tooltipHeight - 12, left: vw - TOOLTIP_WIDTH - 12 }, // bottom-right
+    { top: 12, left: 12 },                                          // top-left
+    { top: vh - tooltipHeight - 12, left: 12 },                     // bottom-left
+  ];
+
+  for (const corner of corners) {
+    const cr: SimpleRect = {
+      top: corner.top,
+      left: corner.left,
+      right: corner.left + TOOLTIP_WIDTH,
+      bottom: corner.top + tooltipHeight,
+    };
+    if (!rectsOverlap(cr, targetRect)) {
+      return { ...corner, side: "bottom" as Side };
+    }
+  }
+
+  // Last resort — top-right corner; target fills entire viewport
   return {
-    top: Math.max(12, Math.min((vh - tooltipHeight) / 2, vh - tooltipHeight - 12)),
-    left: 12,
-    side: "left",
+    top: 12,
+    left: vw - TOOLTIP_WIDTH - 12,
+    side: "bottom" as Side,
   };
 }
 

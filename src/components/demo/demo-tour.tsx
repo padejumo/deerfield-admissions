@@ -78,6 +78,17 @@ const OPS_DIRECTOR_STEPS: TourStep[] = [
     hint: "Click any row to see the AI's 6-step processing chain",
   },
   {
+    title: "Step 4b: AI Processing Chain",
+    view: "vob",
+    target: "vob-processing-dialog",
+    side: "left",
+    autoClick: "[data-tour='vob-table'] tbody tr:first-child",
+    description:
+      "Six steps with confidence scores: eligibility check, benefits extraction, level-of-care verification, authorization status, network check, and coverage determination. Each step cites the source data used.",
+    detail:
+      "Standard commercial cases complete in under 30 seconds at >95% confidence. Complex cases (Medicaid PA, Tricare) flag at the specific failing step — so staff know exactly where to focus their review.",
+  },
+  {
     title: "Step 5: Bed Availability",
     view: "beds",
     target: "beds-center-grid",
@@ -191,6 +202,17 @@ const TREATMENT_SPECIALIST_STEPS: TourStep[] = [
     hint: "Click any row to see the AI's full 6-step processing chain",
   },
   {
+    title: "Step 2b: AI Processing Chain",
+    view: "vob",
+    target: "vob-processing-dialog",
+    side: "left",
+    autoClick: "[data-tour='vob-table'] tbody tr:first-child",
+    description:
+      "Six steps with confidence scores: eligibility check, benefits extraction, level-of-care verification, authorization status, network check, and final coverage determination. Each step is sourced and auditable.",
+    detail:
+      "Your job shifts from running 4 portal lookups to reviewing the AI's work. When confidence is high (>90%), you can approve in seconds. When it's lower, the system shows exactly which step needs your expertise.",
+  },
+  {
     title: "Step 3: Handle the SLA Breach",
     view: "vob",
     target: "vob-sla-breach",
@@ -271,13 +293,25 @@ const PRODUCT_TOUR_STEPS: TourStep[] = [
     title: "Ops Director: VOB Tracker",
     view: "vob",
     role: "ops_director",
-    target: "vob-summary",
-    side: "bottom",
+    target: "vob-table",
+    side: "top",
     description:
-      "Summary cards show active VOBs, average elapsed time, SLA breaches, and completions. The red SLA breach card is the top priority: VOB-1845 has been waiting over 3 hours.",
+      "Every active verification sorted by urgency. Summary cards above show active VOBs, avg elapsed time, SLA breaches, and completions. VOB-1845 (T.J.) has been waiting over 3 hours — a breach.",
     detail:
       "The AI handles about 80% of standard cases in under 30 seconds. Complex cases surface for human review with confidence scores.",
-    hint: "Click any VOB row to see the AI's 6-step processing chain",
+    hint: "Click any row to see the AI's 6-step processing chain",
+  },
+  {
+    title: "Ops Director: AI Processing Chain",
+    view: "vob",
+    role: "ops_director",
+    target: "vob-processing-dialog",
+    side: "left",
+    autoClick: "[data-tour='vob-table'] tbody tr:first-child",
+    description:
+      "Six steps with confidence scores: eligibility check, benefits extraction, level-of-care verification, authorization status, network check, and coverage determination. Each step cites the source.",
+    detail:
+      "Standard cases complete in under 30 seconds at >95% confidence. Complex cases surface at the specific failing step, with the AI's findings pre-filled so staff can focus their review.",
   },
   {
     title: "Ops Director: Referral Pipeline",
@@ -362,6 +396,18 @@ const PRODUCT_TOUR_STEPS: TourStep[] = [
     detail:
       "Goal: reduce per-VOB time from 47 minutes to under 30 seconds. Across 5 specialists processing 8 VOBs/day, that recovers about 156 staff hours per month.",
     hint: "Click any VOB to see the AI's 6-step processing chain with confidence scores",
+  },
+  {
+    title: "Treatment Specialist: AI Processing Chain",
+    view: "vob",
+    role: "treatment_specialist",
+    target: "vob-processing-dialog",
+    side: "left",
+    autoClick: "[data-tour='vob-table'] tbody tr:first-child",
+    description:
+      "Jessica's review workflow: check confidence scores, verify the AI's findings against the source citations, and approve or escalate. No portal switching, no manual data entry.",
+    detail:
+      "Per-VOB time drops from 47 minutes to under 30 seconds for standard cases. Her expertise goes to the cases that actually need it — the Medicaid PA carve-outs, the Tricare edge cases.",
   },
 
   // --- Closing ---
@@ -453,14 +499,19 @@ export function DemoTour({
     }
   }, []);
 
-  // Remove pulse class from any previously pulsing element
+  // Remove pulse/cue classes from any previously highlighted elements
   const removePulse = useCallback(() => {
     document.querySelectorAll(".tour-pulse").forEach((el) => {
       el.classList.remove("tour-pulse");
     });
+    document.querySelectorAll(".tour-click-cue").forEach((el) => {
+      el.classList.remove("tour-click-cue");
+    });
   }, []);
 
-  // Apply pulse class to the target element if the step has a hint
+  // Apply pulse class to the target element if the step has a hint.
+  // Also add .tour-click-cue to the first 3 clickable children so evaluators
+  // can see exactly which elements to interact with.
   const applyPulse = useCallback(
     (step: TourStep) => {
       removePulse();
@@ -468,7 +519,16 @@ export function DemoTour({
         const el = document.querySelector<HTMLElement>(
           `[data-tour="${step.target}"]`
         );
-        if (el) el.classList.add("tour-pulse");
+        if (el) {
+          el.classList.add("tour-pulse");
+          // Highlight the first few clickable children within the target
+          const clickables = Array.from(
+            el.querySelectorAll<HTMLElement>('[class*="cursor-pointer"]')
+          )
+            .filter((child) => child !== el)
+            .slice(0, 3);
+          clickables.forEach((child) => child.classList.add("tour-click-cue"));
+        }
       }
     },
     [removePulse]
@@ -558,6 +618,22 @@ export function DemoTour({
       // Apply pulse + autoClick after positioning
       applyPulse(targetStep);
       performAutoClick(targetStep);
+
+      // If step uses autoClick, the target element may not be present yet
+      // (e.g., a dialog that opens as a result of the click). Wait briefly,
+      // then re-measure so the tooltip snaps to the newly appeared element.
+      if (targetStep.autoClick && targetStep.target) {
+        await new Promise((r) => setTimeout(r, 350));
+        if (stepRef.current !== myStep) return;
+        const autoEl = await waitForElement(
+          `[data-tour="${targetStep.target}"]`,
+          1500
+        );
+        if (stepRef.current !== myStep) return;
+        if (autoEl && isElementVisible(autoEl)) {
+          setTargetRect(autoEl.getBoundingClientRect());
+        }
+      }
     },
     [steps, stepIndex, onNavigate, mode, onSwitchRole, removePulse, applyPulse, performAutoClick]
   );

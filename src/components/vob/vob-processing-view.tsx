@@ -32,7 +32,7 @@ export function VOBProcessingView({
   if (!chain) {
     return (
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent data-tour="vob-processing-dialog" className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{record.id} — Processing</DialogTitle>
             <DialogDescription>
@@ -57,7 +57,7 @@ export function VOBProcessingView({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent data-tour="vob-processing-dialog" className="sm:max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <DialogTitle className="text-base">{record.id}</DialogTitle>

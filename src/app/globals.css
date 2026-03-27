@@ -145,6 +145,26 @@
   animation: tour-pulse-ring 1.5s ease-in-out infinite;
 }
 
+@keyframes tour-click-cue-pulse {
+  0%, 100% {
+    background-color: oklch(0.72 0.12 85 / 0);
+  }
+  50% {
+    background-color: oklch(0.72 0.12 85 / 0.12);
+  }
+}
+
+/* Applied to clickable children within a tour target when a hint is active */
+.tour-click-cue {
+  animation: tour-click-cue-pulse 1.1s ease-in-out infinite;
+}
+
+/* For non-table elements, also draw a pulsing amber outline */
+.tour-click-cue:not(tr):not(td):not(th) {
+  outline: 2px solid oklch(0.72 0.12 85 / 0.5) !important;
+  outline-offset: 2px;
+}
+
 @keyframes tour-progress-slide {
   0% {
     transform: translateX(-100%);
