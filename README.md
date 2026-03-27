@@ -6,7 +6,7 @@ A prototype for an admissions platform for a network of 11 addiction treatment c
 
 ## Summary
 
-I interviewed 6 people across the admissions pipeline (EVP, 2 BDOs, a Treatment Specialist, Team Lead, and Operations Manager) and did 6 research analyses covering market sizing, funnel benchmarks, insurance verification, BDO operations, referral dynamics, and virtual IOP competition. I scored 10 pain points on 5 dimensions and cross-referenced everything in a 13-source evidence matrix.
+I interviewed 6 people across the admissions pipeline (EVP, 2 BDOs, a Treatment Specialist, Team Lead, and Operations Manager) and did 6 research analyses covering market sizing, funnel benchmarks, insurance verification, BDO operations, referral dynamics, and virtual IOP competition. 
 
 Three problems surfaced at the top:
 
